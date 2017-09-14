@@ -1,20 +1,20 @@
 package org.hyperledger.fabric.sdk.ManageChannelPool;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
  * @author oxchains.huohuo
  * */
 public class ManagedChannelConfig implements Serializable, Cloneable {
+	public void setCoreConnect(String coreConnect) {
+		this.coreConnect = coreConnect;
+	}
 	private static final long serialVersionUID = 6090570773474131622L;
 	private static final String DEFAULT_CONFIG = "channel.properties";
 	public static final String ORG_HYPERLEDGER_FABRIC_SDK_CONFIGURATION = "org.hyperledger.fabric.sdk.configuration";
@@ -40,19 +40,19 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	private int minConnectionsPerPartition = 50;
 	/** Max number of connections per partition. */
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
-	private boolean lazyInit;
+	private boolean lazyInit = true;
 	private int maxConnectionsPerPartition = 300;
 	/**
 	 * Time to wait before a call to getConnection() times out and returns an
 	 * error.
 	 */
-	private long connectionTimeoutInMs = 1000L;
+	private long connectionTimeoutInMs = 2L;
 	/** Number of new connections to create in 1 batch. */
 	private int incrConnectNum = 50;
 	
 	private String[] partitionAddrAndPort;
 	
-	private String coreConnnect;
+	private String coreConnect;
 	/** Maximum age of an unused connection before it is closed off. */
 	private long idleMaxAgeInSeconds = 3600L;
 	/** Number of release-connection helper threads to create per partition. */
@@ -145,8 +145,8 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 					}
 				}
 			}
-			if (checkNullAndEmpty(this.coreConnnect)) {
-				this.partitionAddrAndPort = this.coreConnnect.trim().split(",");
+			if (checkNullAndEmpty(this.coreConnect)) {
+				this.partitionAddrAndPort = this.coreConnect.trim().split(",");
 				this.partitionCount = this.partitionAddrAndPort.length;
 			}
 		} catch (Exception e) {
@@ -300,25 +300,11 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 		return this.partitionCount;
 	}
 
-	public void setPartitionCount(int partitionCount) {
-		this.partitionCount = partitionCount;
-	}
-
 	public String[] getPartitionAddrAndPort() {
 		return partitionAddrAndPort;
 	}
 
-	public void setPartitionAddrAndPort(String[] partitionAddrAndPort) {
-		this.partitionAddrAndPort = partitionAddrAndPort;
-	}
-
-	public String getCoreConnnect() {
-		return coreConnnect;
-	}
-
-	public void setCoreConnnect(String coreConnnect) {
-		this.coreConnnect = coreConnnect;
-	}
+	
     public boolean isLazyInit(){
     	return lazyInit;
     }
