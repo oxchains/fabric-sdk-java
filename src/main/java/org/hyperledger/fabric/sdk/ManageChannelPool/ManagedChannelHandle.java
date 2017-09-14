@@ -1,5 +1,7 @@
 package org.hyperledger.fabric.sdk.ManageChannelPool;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jcajce.provider.symmetric.Threefish;
@@ -37,6 +39,10 @@ public class ManagedChannelHandle {
 		this.managedChannel.shutdownNow();
 	}
 	public ManagedChannel shutdown(){
+		this.connectionLastUsedInMs = 0;
+		this.connectionCreationTimeInMs =0;
+		this.addr = null;
+		this.port = null;
 		return this.managedChannel.shutdown();
 	}
 	public boolean isShutdown(){

@@ -2,7 +2,9 @@ package org.hyperledger.fabric.sdk.ManageChannelPool;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -71,6 +73,7 @@ public class MChannelPool implements Serializable {
 				this.maxAliveScheduler.awaitTermination(5L, TimeUnit.SECONDS);
 				this.keepAliveScheduler.awaitTermination(5L, TimeUnit.SECONDS);
 				this.asyncExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+				this.terminateAllConnections();
 			} catch (InterruptedException localInterruptedException) {
 			}
 			logger.info("Connection pool has been shutdown.");
@@ -183,7 +186,7 @@ public class MChannelPool implements Serializable {
 				this.connectionsScheduler.execute(connec);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.debug(e.toString());
 		}
 	}
 
@@ -197,13 +200,19 @@ public class MChannelPool implements Serializable {
 	 *
 	 */
 	protected String captureStackTrace(String message) {
-		StringBuilder stringBuilder = new StringBuilder(
-				String.format(message, new Object[] { Thread.currentThread().getName() }));
-		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-		for (int i = 0; i < trace.length; i++) {
-			stringBuilder.append(" " + trace[i] + "\r\n");
+		StringBuilder stringBuilder = null;
+		try {
+			stringBuilder = new StringBuilder(
+					String.format(message, new Object[] { Thread.currentThread().getName() }));
+			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+			for (int i = 0; i < trace.length; i++) {
+				stringBuilder.append(" " + trace[i] + "\r\n");
+			}
+			stringBuilder.append("");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.debug(e.toString());
 		}
-		stringBuilder.append("");
 
 		return stringBuilder.toString();
 	}
@@ -218,11 +227,30 @@ public class MChannelPool implements Serializable {
 	 * @return number of created connections
 	 */
 	public int getTotalCreatedConnections() throws Exception {
-		Collection<ConnectionPartition> values = map.values();
 		int total = 0;
-		for (ConnectionPartition connectionPartition : values) {
-			total += connectionPartition.getCreatedConnections();
+		try {
+			Collection<ConnectionPartition> values = map.values();
+			total = 0;
+			for (ConnectionPartition connectionPartition : values) {
+				total += connectionPartition.getCreatedConnections();
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.debug(e.toString());
 		}
 		return total;
 	}
+	public void terminateAllConnections(){
+		try {
+			Set<String> set = map.keySet();
+			Iterator<String> iterator = set.iterator();
+			while (iterator.hasNext()) {
+				 String next = iterator.next();
+				 map.get(next).shutdown();
+			}
+		} catch (Exception e) {
+	
+			logger.debug(e.toString());
+		}
+	};
 }
