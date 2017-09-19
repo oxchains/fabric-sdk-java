@@ -37,9 +37,11 @@ public class ConnectionPartition implements Serializable {
 			this.statsLock.writeLock().lock();
 			this.createdConnections += increment;
 			this.statsLock.writeLock().unlock();
+
 		}catch(Exception e){
+			this.statsLock.writeLock().unlock();
 			logger.debug(e.toString());
-		} 
+		}
 	}
 
 	protected void addFreeConnection(ManagedChannelHandle managedChannel) throws SQLException {

@@ -25,7 +25,6 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	 */
 	private int poolAvailabilityThreshold = 0;
 	
-	private long poolWatchTesterSeconds = 3L;
 	/**
 	 * After attempting to acquire a connection and failing, wait for this value
 	 * before attempting to acquire a new connection again.
@@ -41,7 +40,7 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	/** Max number of connections per partition. */
 	/** If set to true, the connection pool will remain empty until the first connection is obtained. */
 	private boolean lazyInit = true;
-	private int maxConnectionsPerPartition = 300;
+	private int maxConnectionsPerPartition = 1000;
 	/**
 	 * Time to wait before a call to getConnection() times out and returns an
 	 * error.
@@ -55,8 +54,6 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	private String coreConnect;
 	/** Maximum age of an unused connection before it is closed off. */
 	private long idleMaxAgeInSeconds = 3600L;
-	/** Number of release-connection helper threads to create per partition. */
-	private int releaseHelperThreads = 0;
 	/** Number of partitions. */
 	private int partitionCount;
 	/** Connections older than this are sent a keep-alive statement. */
@@ -149,11 +146,13 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 				this.partitionAddrAndPort = this.coreConnect.trim().split(",");
 				this.partitionCount = this.partitionAddrAndPort.length;
 			}
+			else{
+				this.partitionCount = 0;
+			}
 		} catch (Exception e) {
 			logger.error("setProperties fail:",e);
 		} 
 	}
-
 	public boolean checkNullAndEmpty(String name) {
 		if (null == name || name.isEmpty()) {
 			return false;
@@ -193,12 +192,6 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 			}
 			if (this.incrConnectNum <= 0 || this.incrConnectNum > 300) {
 				this.incrConnectNum = 300;
-			}
-			if (this.partitionCount < 1) {
-				this.partitionCount = 1;
-			}
-			if (this.releaseHelperThreads < 0) {
-				this.releaseHelperThreads = 0;
 			}
 			if (this.acquireRetryDelayInMs <= 0L) {
 				this.acquireRetryDelayInMs = 1000L;
@@ -288,14 +281,6 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 		this.idleMaxAgeInSeconds = idleMaxAgeInSeconds;
 	}
 
-	public int getReleaseHelperThreads() {
-		return this.releaseHelperThreads;
-	}
-
-	public void setReleaseHelperThreads(int releaseHelperThreads) {
-		this.releaseHelperThreads = releaseHelperThreads;
-	}
-
 	public int getPartitionCount() {
 		return this.partitionCount;
 	}
@@ -319,14 +304,4 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	public void setConnectionTimeoutInMs(long connectionTimeoutInMs) {
 		this.connectionTimeoutInMs = connectionTimeoutInMs;
 	}
-
-	public long getPoolWatchTesterSeconds() {
-		return poolWatchTesterSeconds;
-	}
-
-	public void setPoolWatchTesterSeconds(long poolWatchTesterSeconds) {
-		this.poolWatchTesterSeconds = poolWatchTesterSeconds;
-	}
-	
-   
 }

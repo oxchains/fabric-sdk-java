@@ -87,9 +87,7 @@ public class MChannelPool implements Serializable {
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param config
-	 *            Configuration for pool
+	 *
 	 * 
 	 */
 	public MChannelPool() {
@@ -115,10 +113,6 @@ public class MChannelPool implements Serializable {
 	 * intended to be called by applications (hence set to protected). Call
 	 * connection.close() instead which will return the connection back to the
 	 * pool.
-	 *
-	 * @param connection
-	 *            to release
-	 * @throws SQLException
 	 */
 	public void releaseManagedChannelHandle(ManagedChannelHandle handle,String addr, String port) {
 		try {
@@ -156,34 +150,34 @@ public class MChannelPool implements Serializable {
 				connectionPartition.setFreeConnections(quene);
 				String addrAndPort = this.config.getPartitionAddrAndPort()[i];
 				String[] split = addrAndPort.split(":");
-				for (int j = 0; j < this.config.getMinConnectionsPerPartition(); j++) {
-					connectionPartition.addFreeConnection(new ManagedChannelHandle(split[0],Integer.parseInt(split[1])));
-				}
-				map.put(connectionPartition.getPartitionAddrAndPort(), connectionPartition);
-				if ((this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) > 0L)
-						|| (this.config.getIdleMaxAge(TimeUnit.SECONDS) > 0L)) {
-					Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler,
-							this, this.config.getIdleMaxAge(TimeUnit.MILLISECONDS),
-							this.config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS));
-					long delayInSeconds = this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS);
-					if (delayInSeconds == 0L) {
-						delayInSeconds = this.config.getIdleMaxAge(TimeUnit.SECONDS);
+					for (int j = 0; j < this.config.getMinConnectionsPerPartition(); j++) {
+						connectionPartition.addFreeConnection(new ManagedChannelHandle(split[0],Integer.parseInt(split[1])));
 					}
-					if ((this.config.getIdleMaxAge(TimeUnit.SECONDS) < delayInSeconds)
-							&& (this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) != 0L)
-							&& (this.config.getIdleMaxAge(TimeUnit.SECONDS) != 0L)) {
-						delayInSeconds = this.config.getIdleMaxAge(TimeUnit.SECONDS);
+					map.put(connectionPartition.getPartitionAddrAndPort(), connectionPartition);
+					if ((this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) > 0L)
+							|| (this.config.getIdleMaxAge(TimeUnit.SECONDS) > 0L)) {
+						Runnable connectionTester = new ConnectionTesterThread(connectionPartition, this.keepAliveScheduler,
+								this, this.config.getIdleMaxAge(TimeUnit.MILLISECONDS),
+								this.config.getIdleConnectionTestPeriod(TimeUnit.MILLISECONDS));
+						long delayInSeconds = this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS);
+						if (delayInSeconds == 0L) {
+							delayInSeconds = this.config.getIdleMaxAge(TimeUnit.SECONDS);
+						}
+						if ((this.config.getIdleMaxAge(TimeUnit.SECONDS) < delayInSeconds)
+								&& (this.config.getIdleConnectionTestPeriod(TimeUnit.SECONDS) != 0L)
+								&& (this.config.getIdleMaxAge(TimeUnit.SECONDS) != 0L)) {
+							delayInSeconds = this.config.getIdleMaxAge(TimeUnit.SECONDS);
+						}
+						this.keepAliveScheduler.schedule(connectionTester, delayInSeconds, TimeUnit.SECONDS);
 					}
-					this.keepAliveScheduler.schedule(connectionTester, delayInSeconds, TimeUnit.SECONDS);
-				}
-				if (this.config.getMaxConnectionAgeInSeconds() > 0L) {
-					Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition,
-							this.maxAliveScheduler, this, this.config.getMaxConnectionAge(TimeUnit.MILLISECONDS));
-					this.maxAliveScheduler.schedule(connectionMaxAgeTester, this.config.getMaxConnectionAgeInSeconds(),
-							TimeUnit.SECONDS);
-				}
-				Runnable connec= new PoolWatchThread(connectionPartition, this);
-				this.connectionsScheduler.execute(connec);
+					if (this.config.getMaxConnectionAgeInSeconds() > 0L) {
+						Runnable connectionMaxAgeTester = new ConnectionMaxAgeThread(connectionPartition,
+								this.maxAliveScheduler, this, this.config.getMaxConnectionAge(TimeUnit.MILLISECONDS));
+						this.maxAliveScheduler.schedule(connectionMaxAgeTester, this.config.getMaxConnectionAgeInSeconds(),
+								TimeUnit.SECONDS);
+					}
+					Runnable connec= new PoolWatchThread(connectionPartition, this);
+					this.connectionsScheduler.execute(connec);
 			}
 		} catch (Exception e) {
 			logger.debug(e.toString());

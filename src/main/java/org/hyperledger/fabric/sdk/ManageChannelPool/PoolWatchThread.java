@@ -37,10 +37,6 @@ public class PoolWatchThread implements Runnable {
 	    int maxNewConnections;
 	    while (this.signalled) {
 			try {
-				if (this.lazyInit){ // block the first time if this is on.
-					this.partition.getPoolWatchThreadSignalQueue().take();
-					this.lazyInit = false;
-				}
 				maxNewConnections = this.partition.getMaxConnections() - this.partition.getCreatedConnections();
 				while(maxNewConnections == 0 || (this.partition.getAvailableConnections() *100/this.partition.getMaxConnections() > this.poolAvailabilityThreshold)){
 					if (maxNewConnections == 0){
