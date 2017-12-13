@@ -80,7 +80,7 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	public void loadProperties() {
 		try {
 			if(null != p){
-			setProperties(this.p);
+			setProperties(p);
 			}
 		}  catch (Exception e) {
 			logger.error("ManagedChannelConfig loadProperties fail: ",e);
@@ -161,7 +161,7 @@ public class ManagedChannelConfig implements Serializable, Cloneable {
 	}
 
 	
-
+    @Override
 	public ManagedChannelConfig clone() throws CloneNotSupportedException {
 		ManagedChannelConfig clone = null;
 		try {
