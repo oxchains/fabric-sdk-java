@@ -65,10 +65,8 @@ public class ConnectionPartition implements Serializable {
 	protected ManagedChannelHandle getManagedChannelHandle() throws Exception {
 		ManagedChannelHandle managedChannelHandle = this.pollConnection();
 		if(null == managedChannelHandle){
-			System.out.println(this.pool.getConfig().getConnectionTimeoutInMs());
 			managedChannelHandle = (ManagedChannelHandle) this.freeConnections.poll(this.pool.getConfig().getConnectionTimeoutInMs(), TimeUnit.SECONDS);
 		}
-		System.out.println("获得连接---"+this.addr+":"+this.port+"--------池中还有连接："+this.getAvailableConnections()+"已经创建连接："+this.createdConnections);
 	    return managedChannelHandle;
 	}
     public void putConnectionBackInPartition(ManagedChannelHandle handle){
@@ -79,7 +77,6 @@ public class ConnectionPartition implements Serializable {
 					 handle = null;
 				 }
     		 }
-    		 System.out.println("回收连接---"+this.addr+":"+this.port+"--------池中还有连接："+this.getAvailableConnections()+"已经创建连接："+this.createdConnections);
 		} catch (Exception e) {
 			logger.debug(e.toString());
 		}
